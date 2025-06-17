@@ -1,10 +1,11 @@
 # Welcome to Trucksy App 👋
 
-This is a Final Year project named as Trucksy created with [React Native](https://reactnative.dev) using [Expo](https://expo.dev) 
+This is a Final Year project named as Trucksy created with [React Native](https://reactnative.dev) using [Expo](https://expo.dev);
 
  ```bash
    npm create-expo-app@latest
 ```
+
 ## Get started
 
 1. Install dependencies
