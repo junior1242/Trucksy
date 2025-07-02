@@ -21,4 +21,4 @@ This is a Final Year project named as Trucksy created with [React Native](https:
    ```
 
 - We are using [Expo Go](https://expo.dev/go) for the output on android device for developers.
-- We are using a [development build](https://docs.expo.dev/develop/development-builds/introduction/) for testing as well as for users.  
+- We will using a [development build](https://docs.expo.dev/develop/development-builds/introduction/) for testing as well as for users.  
