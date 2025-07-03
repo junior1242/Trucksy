@@ -1,24 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import Login from "@/components/Login";
+import React from "react";
+import { View } from "react-native";
 
-export default function Index() {
+const index = () => {
   return (
-    <View style={styles.View}>
-      <Text>this is the final year project</Text>
-      <Text>We will start after tommorrow InshaAllah</Text>
-  
+    <View>
+      <Login />
     </View>
   );
-}
+};
 
-
-const styles = StyleSheet.create({
-  View: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems:'center'
-  },
-  Text: {
-    backgroundColor: 'red',
-    color:'green',
-  }
-})
+export default index;
