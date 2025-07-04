@@ -1,5 +1,5 @@
-import React from 'react'
-import { Stack } from 'expo-router'
+import { Stack } from "expo-router";
+import React from "react";
 
 const _layout = () => {
   return (
@@ -7,11 +7,11 @@ const _layout = () => {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: true,
+          headerShown: false,
         }}
       />
-      </Stack>
-  )
-}
+    </Stack>
+  );
+};
 
-export default _layout
+export default _layout;
