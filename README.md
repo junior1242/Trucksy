@@ -2,6 +2,8 @@
 
 This is a Final Year project named as Trucksy created with [React Native](https://reactnative.dev) using [Expo](https://expo.dev);
 
+Now we are also using [NativeWind](https://nativewind.dev) for responsiveness of different devices in this Expo Project
+
  ```bash
    npm create-expo-app@latest
 ```
@@ -19,6 +21,7 @@ This is a Final Year project named as Trucksy created with [React Native](https:
    ```bash
    npm expo start
    ```
+   
 
 - We are using [Expo Go](https://expo.dev/go) for the output on android device for developers.
 - We will using a [development build](https://docs.expo.dev/develop/development-builds/introduction/) for testing as well as for users.  
