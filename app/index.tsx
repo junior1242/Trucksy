@@ -1,18 +1,16 @@
-import Login from "@/components/Login";
+// import Login from "@/components/Login";
+import "../global.css"
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View,Text } from "react-native";
 
 const index = () => {
   return (
-    <View style={styles.container}>
-      <Login />
+    <View className="flex-1 justify-center items-center  bg-black">
+      {/* <Login /> */}
+    <Text className='text-white'>Helllo World</Text>
     </View>
   );
 };
 
 export default index;
 
-const styles = StyleSheet.create({
-  container: {
-  },
-})
