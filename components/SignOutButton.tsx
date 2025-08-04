@@ -1,7 +1,7 @@
 import { styles } from "@/assets/styles/home.styles";
 import { COLORS } from "@/constants/colors";
 import { useClerk } from "@clerk/clerk-expo";
-import { Ionicons } from "@expo/vector-icons";
+// import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, Alert, Text } from "react-native";
 
 export const SignOutButton = () => {
