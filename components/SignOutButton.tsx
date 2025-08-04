@@ -1,27 +1,47 @@
+import { styles } from "@/assets/styles/home.styles";
+import { COLORS } from "@/constants/colors";
 import { useClerk } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
-import { Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity, Alert, Text } from "react-native";
 
 export const SignOutButton = () => {
   // Use `useClerk()` to access the `signOut()` function
   const { signOut } = useClerk();
-  const router = useRouter();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Redirect to your desired page
-      router.replace("/");
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-    }
+  const handleSignOut = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+              Alert.alert(
+                "Logout",
+                "You have been logged out successfully.",
+                [{ text: "OK" }]
+              );
+            } catch (error) {
+              console.error("Error signing out:", error);
+              Alert.alert(
+                "Logout Error",
+                "Failed to logout. Please try again.",
+                [{ text: "OK" }]
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <TouchableOpacity onPress={handleSignOut}>
-      <Text>Sign out</Text>
+    <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+      <Text style={{ color: COLORS.text }}>Logout</Text>
     </TouchableOpacity>
   );
 };

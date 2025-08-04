@@ -97,7 +97,7 @@ export default function Page() {
         />
 
         <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-          <Text style={styles.buttonText}>SignIn</Text>
+          <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
