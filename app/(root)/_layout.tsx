@@ -1,15 +1,18 @@
-// app/_layout.tsx or wherever your layout file is
+import { SignOutButton } from "@/components/SignOutButton";
 import { useUser } from "@clerk/clerk-expo";
 import { Redirect } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../../components/CustomDriverContent";
-import { SignOutButton } from "@/components/SignOutButton";
 
 export default function Layout() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
-  if (!isSignedIn) return <Redirect href="/sign-in" />;
+  if (!isLoaded) return null;
+
+  if (!isSignedIn) {
+    return <Redirect href="/sign-in" />; // ✅ fix path
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -17,6 +20,7 @@ export default function Layout() {
         <Drawer.Screen name="index" options={{ drawerLabel: "Home" }} />
         <Drawer.Screen name="Setting" options={{ drawerLabel: "Setting" }} />
       </Drawer>
+      {/* ⚡ Move SignOutButton into CustomDrawerContent if you want it in drawer */}
       <SignOutButton />
     </GestureHandlerRootView>
   );

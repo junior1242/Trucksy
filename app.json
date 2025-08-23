@@ -43,7 +43,9 @@
       "router": {},
       "eas": {
         "projectId": "e4e66ced-9f70-4509-9a85-9aa6acaab31e"
-      }
+      },
+      "CLERK_PUBLISHABLE_KEY": "pk_test_YWN0dWFsLWNoaXBtdW5rLTMyLmNsZXJrLmFjY291bnRzLmRldiQ",
+      "API_URL": "http://localhost:3000"
     }
   }
 }

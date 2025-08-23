@@ -142,4 +142,4 @@ export const THEMES = {
   mint: mintTheme,
 };
 
-export const COLORS = THEMES.coffee;
+export const COLORS = THEMES.midnight;
