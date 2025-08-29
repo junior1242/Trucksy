@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { styles } from "@/assets/styles/auth.styles";
+import { styles } from "../../assets/styles/auth.styles";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -121,7 +121,7 @@ export default function SignUpScreen() {
     >
       <View style={styles.container}>
         <Image
-          source={require("../../assets/images/revenue-i2.png")}
+          source={require("../../assets/images/TrucksyLogo.png")}
           style={styles.illustration}
         />
         <Text style={styles.title}>Create Account</Text>

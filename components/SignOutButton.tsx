@@ -1,6 +1,6 @@
 // import { styles } from "@/assets/styles/home.styles";
-import { styles } from "@/assets/styles/home.styles";
-import { COLORS } from "@/constants/colors";
+import { styles } from "../assets/styles/home.styles";
+import { COLORS } from "../constants/colors";
 import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 // import { Ionicons } from "@expo/vector-icons";
