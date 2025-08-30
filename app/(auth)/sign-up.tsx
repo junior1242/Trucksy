@@ -1,123 +1,71 @@
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { styles } from "../../assets/styles/auth.styles";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
-
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { auth, db } from "../../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [role, setRole] = useState("user"); // "user" or "driver"
 
-  // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
+    setError("");
+    if (!emailAddress || !password) {
+      setError("Please enter an email and password.");
+      return;
+    }
 
-    // Start sign-up process using email and password provided
     try {
-      await signUp.create({
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
         emailAddress,
-        password,
+        password
+      );
+      const user = userCredential.user;
+
+      // 2. Send Firebase email verification
+      await sendEmailVerification(user);
+
+      // 3. Save user role and email to Firestore database
+      await setDoc(doc(db, "users", user.uid), {
+        role: role,
+        email: emailAddress,
       });
 
-      // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
-      setPendingVerification(true);
-    } catch (err) {
-      if (err.errors?.[0]?.code === "form_identifier_exists") {
-        setError("That email address is already in use,Please try another");
-      } else {
-        setError("an error accured,Please try Againb");
-      }
-      console.log(err);
-      
+      // 4. Inform user and redirect
+      Alert.alert(
+        "Verification Email Sent",
+        "Please check your inbox and click the verification link to activate your account before signing in."
+      );
+      router.push("/sign-in");
+    } catch (e) {
+      setError(e.message);
+      console.error(e);
     }
   };
-
-  // Handle submission of verification form
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
-
-    try {
-      // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      // If verification was completed, set the session to active
-      // and redirect the user
-      if (signUpAttempt.status === "complete") {
-        await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/");
-      } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
-      }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
-
-  if (pendingVerification) {
-    return (
-      <KeyboardAvoidingView style={styles.verificationContainer}>
-        <Text style={styles.verificationTitle}>Verify your email</Text>
-
-        {error ? (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons
-                name="alert-circle"
-                size={20}
-                color={COLORS.textLight}
-              />
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        <TextInput
-          style={[styles.verificationInput, error && styles.errorInput]}
-          value={code}
-          placeholder="Enter your verification code"
-          onChangeText={(code) => setCode(code)}
-        />
-        <TouchableOpacity onPress={onVerifyPress} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
-    );
-  }
 
   return (
-    <KeyboardAwareScrollView style={{ flex: 1 }}
+    <KeyboardAwareScrollView
+      style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1 }}
       enableOnAndroid={true}
-      enableAutomaticScroll={true}
-      extraScrollHeight={100}
     >
       <View style={styles.container}>
         <Image
@@ -129,13 +77,6 @@ export default function SignUpScreen() {
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons
-                name="alert-circle"
-                size={20}
-                color={COLORS.textLight}
-              />
-            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -156,6 +97,31 @@ export default function SignUpScreen() {
           secureTextEntry={true}
           onChangeText={(password) => setPassword(password)}
         />
+
+        <View style={styles.radioContainer}>
+          <TouchableOpacity
+            style={styles.radioButton}
+            onPress={() => setRole("user")}
+          >
+            <Ionicons
+              name={role === "user" ? "radio-button-on" : "radio-button-off"}
+              size={20}
+              color={COLORS.primary}
+            />
+            <Text style={styles.radioText}>User</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.radioButton}
+            onPress={() => setRole("driver")}
+          >
+            <Ionicons
+              name={role === "driver" ? "radio-button-on" : "radio-button-off"}
+              size={20}
+              color={COLORS.primary}
+            />
+            <Text style={styles.radioText}>Driver</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
           <Text style={styles.buttonText}>Sign Up</Text>

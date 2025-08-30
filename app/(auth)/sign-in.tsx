@@ -1,58 +1,47 @@
-import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View ,Image} from "react-native";
-import React,{useState} from "react";
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
+import { Text, TextInput, TouchableOpacity, View, Image, Alert } from "react-native";
+import React, { useState } from "react";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { styles } from "../../assets/styles/auth.styles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
-
-
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { auth } from "../../firebaseConfig";
 
 export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
-  const [error,setError] = useState("")
+  const [error, setError] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
 
-  // Handle the submission of the sign-in form
   const onSignInPress = async () => {
-    if (!isLoaded) return;
-
-    // Start the sign-in process using the email and password provided
+    setError("");
     try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
+      const userCredential = await signInWithEmailAndPassword(auth, emailAddress, password);
+      
+      if (userCredential.user.emailVerified) {
+        // User's email is verified, allow sign-in
         router.replace("/");
       } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        // User's email is not verified
+        await signOut(auth); // Immediately sign the user out
+        Alert.alert(
+          "Verify Your Email",
+          "You must verify your email address before you can sign in. Please check your inbox for the verification link."
+        );
+        setError("Please verify your email to sign in.");
       }
-    } catch (err) {
-      if (err.errors?.[0]?.code === "form_password_incorrect") {
-        setError('Passeword is Incorrect. Please try again')
-      } else {
-        setError("an error accured,Please try Againb")
-      }
+    } catch (e) {
+      // Handle errors like wrong password, user not found, etc.
+      setError(e.message);
     }
-  };
+  }
 
   return (
     <KeyboardAwareScrollView
       style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1 }}
       enableOnAndroid={true}
-      enableAutomaticScroll={true}
-      extraScrollHeight={30}
     >
       <View style={styles.container}>
         <Image
@@ -64,13 +53,6 @@ export default function Page() {
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons
-                name="alert-circle"
-                size={20}
-                color={COLORS.textLight}
-              />
-            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -92,10 +74,8 @@ export default function Page() {
           onChangeText={(password) => setPassword(password)}
         />
 
-
-
         <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-          <Text style={styles.buttonText}>SignIn</Text>
+          <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
@@ -105,14 +85,11 @@ export default function Page() {
           <Link href={'/sign-up'} asChild>
             <TouchableOpacity>
               <Text style={styles.linkText}>
-              Sign up
+                Sign up
               </Text>
-          </TouchableOpacity>
+            </TouchableOpacity>
           </Link>
         </View>
-
-        
-
       </View>
     </KeyboardAwareScrollView>
   );
