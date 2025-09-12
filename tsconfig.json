@@ -1,5 +1,7 @@
 {
+  "compilerOptions": {},
   "extends": "expo/tsconfig.base",
+<<<<<<< HEAD
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
@@ -13,6 +15,8 @@
       "react-native"
     ]
   },
+=======
+>>>>>>> d24d65ffb41a9bba844d6c6c7c2a95b9d606d307
   "include": [
     "**/*.ts",
     "**/*.tsx",

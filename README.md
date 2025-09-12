@@ -26,4 +26,3 @@ Now we are also using [NativeWind](https://nativewind.dev) for responsiveness of
 - We are using [Expo Go](https://expo.dev/go) for the output on android device for developers.
 - We will using a [development build](https://docs.expo.dev/develop/development-builds/introduction/) for testing as well as for users.  
 
-# today we will start developing our app,InshaAllah 

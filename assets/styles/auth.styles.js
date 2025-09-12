@@ -108,4 +108,18 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
   },
+  radioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: COLORS.text,
+  },
 });

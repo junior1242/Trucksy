@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Slot } from "expo-router";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
@@ -16,5 +17,18 @@ export default function RootLayout() {
     >
       <Slot />
     </ClerkProvider>
+=======
+import { Stack } from "expo-router";
+import { AuthProvider } from "../context/AuthContext";
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(root)" />
+      </Stack>
+    </AuthProvider>
+>>>>>>> d24d65ffb41a9bba844d6c6c7c2a95b9d606d307
   );
 }
