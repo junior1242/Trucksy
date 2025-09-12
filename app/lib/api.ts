@@ -1,17 +1,13 @@
-export async function api(
-  path: string,
-  opts: any = {},
-  getToken: () => Promise<string | null>
-) {
-  const token = await getToken();
-  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}${path}`, {
-    method: opts.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-expo";
+
+export function useAPI() {
+  const { getToken } = useAuth();
+  const api = axios.create({ baseURL: process.env.EXPO_PUBLIC_API_BASE_URL });
+  api.interceptors.request.use(async (cfg) => {
+    const token = await getToken();
+    if (token) cfg.headers.Authorization = `Bearer ${token}`;
+    return cfg;
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return api;
 }

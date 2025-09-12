@@ -12,6 +12,13 @@
       "supportsTablet": true
     },
     "android": {
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "POST_NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +32,10 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@rnmapbox/maps",
+        { "RNMapboxMapsDownloadToken": "sk.eyJ1IjoianVuaW9yLTEyNDIiLCJhIjoiY21mYzh1bDltMDYydzJtc213d29pOHM3dSJ9.jZvuaG9e8mPykhR_js3Ftw" }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -34,7 +45,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      ["expo-location"],
+      ["expo-notifications"]
     ],
     "experiments": {
       "typedRoutes": true
@@ -45,7 +58,8 @@
         "projectId": "e4e66ced-9f70-4509-9a85-9aa6acaab31e"
       },
       "CLERK_PUBLISHABLE_KEY": "pk_test_YWN0dWFsLWNoaXBtdW5rLTMyLmNsZXJrLmFjY291bnRzLmRldiQ",
-      "API_URL": "http://localhost:3000"
+      "API_URL": "http://localhost:3000",
+      "MAPBOX_ACCESS_TOKEN": "${MAPBOX_ACCESS_TOKEN}"
     }
   }
 }

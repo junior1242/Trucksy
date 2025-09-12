@@ -1,20 +1,35 @@
-import { Link } from "expo-router";
+import { useEffect } from "react";
 import { View, Text } from "react-native";
+import { useUser, SignedIn, SignedOut } from "@clerk/clerk-expo";
+import { Link, useRouter } from "expo-router";
+
 export default function Index() {
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    const role = (user?.publicMetadata as any)?.role;
+    if (role === "user") router.replace("/(user)");
+    else if (role === "driver") router.replace("/(driver)");
+  }, [user?.id]);
+
   return (
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
         alignItems: "center",
+        justifyContent: "center",
         gap: 12,
       }}
     >
-      <Text style={{ fontSize: 24 }}>Trucksy</Text>
-      <Link href="/sign-in">Sign In</Link>
-      <Link href="/sign-up">Sign Up</Link>
-      <Link href="/user/home">Continue as User</Link>
-      <Link href="/driver/home">Continue as Driver</Link>
+      <SignedOut>
+        <Text style={{ fontSize: 18 }}>Welcome to Trucksy</Text>
+        <Link href="/(auth)/sign-in">Sign In</Link>
+        <Link href="/(auth)/sign-up">Sign Up</Link>
+      </SignedOut>
+      <SignedIn>
+        <Text>Loading…</Text>
+      </SignedIn>
     </View>
   );
 }

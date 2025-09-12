@@ -1,226 +1,67 @@
-// import { useSignIn } from "@clerk/clerk-expo";
-// import { Link, useRouter } from "expo-router";
-// import { Text, TextInput, TouchableOpacity, View, Image } from "react-native";
-// import React, { useState } from "react";
-// import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-// import { styles } from "../../assets/styles/auth.styles";
-// import { Ionicons } from "@expo/vector-icons";
-// import { COLORS } from "../../constants/colors";
-
-// export default function Page() {
-//   const { signIn, setActive, isLoaded } = useSignIn();
-//   const router = useRouter();
-//   const [error, setError] = useState("");
-//   const [emailAddress, setEmailAddress] = useState("");
-//   const [password, setPassword] = useState("");
-
-//   // Handle the submission of the sign-in form
-//   const onSignInPress = async () => {
-//     if (!isLoaded) return;
-//     // Start the sign-in process using the email and password provided
-//     try {
-//       const signInAttempt = await signIn.create({
-//         identifier: emailAddress,
-//         password,
-//       });
-
-//       // If sign-in process is complete, set the created session as active
-//       // and redirect the user
-//       if (signInAttempt.status === "complete") {
-//         await setActive({ session: signInAttempt.createdSessionId });
-//         router.replace("/");
-//       } else {
-//         // If the status isn't complete, check why. User might need to
-//         // complete further steps.
-//         console.error(JSON.stringify(signInAttempt, null, 2));
-//       }
-//     } catch (err) {
-//       if (
-//         typeof err === "object" &&
-//         err !== null &&
-//         "errors" in err &&
-//         Array.isArray((err as any).errors) &&
-//         (err as any).errors[0]?.code === "form_password_incorrect"
-//       ) {
-//         setError("Passeword is Incorrect. Please try again");
-//       } else {
-//         setError("An Error Accured, Please try Again");
-//       }
-//     }
-//   };
-
-
-//   return (
-//     <KeyboardAwareScrollView
-//       style={{ flex: 1 }}
-//       contentContainerStyle={{ flexGrow: 1 }}
-//       enableOnAndroid={true}
-//       enableAutomaticScroll={true}
-//       extraScrollHeight={30}
-//     >
-//       <View style={styles.container}>
-//         <Image
-//           source={require("../../assets/images/TrucksyLogo.png")}
-//           style={styles.illustration}
-//         />
-//         <Text style={styles.title}>Welcome Back</Text>
-//         {error ? (
-//           <View style={styles.errorBox}>
-//             <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
-//             <Text style={styles.errorText}>{error}</Text>
-//             <TouchableOpacity onPress={() => setError("")}>
-//               <Ionicons
-//                 name="close-circle"
-//                 size={20}
-//                 color={COLORS.textLight}
-//               />
-//             </TouchableOpacity>
-//           </View>
-//         ) : null}
-
-//         <TextInput
-//           style={[styles.input, error && styles.errorInput]}
-//           autoCapitalize="none"
-//           value={emailAddress}
-//           placeholder="Enter email"
-//           placeholderTextColor="#9A8478"
-//           onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-//         />
-
-//         <TextInput
-//           style={[styles.input, error && styles.errorInput]}
-//           value={password}
-//           placeholder="Enter Password"
-//           placeholderTextColor="#9A8478"
-//           secureTextEntry={true}
-//           onChangeText={(password) => setPassword(password)}
-//         />
-
-//         <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-//           <Text style={styles.buttonText}>Login</Text>
-//         </TouchableOpacity>
-
-//         <View style={styles.footerContainer}>
-//           <Text style={styles.footerText}>Don&apos;t have an account?</Text>
-//           <Link href={"/sign-up"} asChild>
-//             <TouchableOpacity>
-//               <Text style={styles.linkText}>Sign up</Text>
-//             </TouchableOpacity>
-//           </Link>
-//         </View>
-//       </View>
-//     </KeyboardAwareScrollView>
-//   );
-// }
-
-
-
-
 import { useSignIn } from "@clerk/clerk-expo";
-import { Link, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View, Image } from "react-native";
-import React, { useState } from "react";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { styles } from "@/assets/styles/auth.styles";
-import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "@/constants/colors";
+import { useState } from "react";
+import { View, Text, TextInput, Button, Alert } from "react-native";
+import { useRouter } from "expo-router";
 
-export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+export default function SignIn() {
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [phase, setPhase] = useState<"email" | "code">("email");
   const router = useRouter();
-  const [error, setError] = useState("");
-  const [emailAddress, setEmailAddress] = useState("");
-  const [password, setPassword] = useState("");
 
-  // Handle the submission of the sign-in form
-  const onSignInPress = async () => {
-    if (!isLoaded) return;
-
-    // Start the sign-in process using the email and password provided
+  const onSend = async () => {
     try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
+      if (!isLoaded) return;
+      await signIn.create({ identifier: email });
+      await signIn.prepareFirstFactor({ strategy: "email_code" });
+      setPhase("code");
+    } catch (e: any) {
+      Alert.alert("Error", e?.errors?.[0]?.message || "Failed");
+    }
+  };
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/");
-      } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+  const onVerify = async () => {
+    try {
+      const a = await signIn.attemptFirstFactor({
+        strategy: "email_code",
+        code,
+      });
+      if (a.status === "complete") {
+        await setActive({ session: a.createdSessionId });
+        router.replace("/(auth)/role-select");
       }
-    } catch (err) {
-      if (err.errors?.[0]?.code === "form_password_incorrect") {
-        setError("Passeword is Incorrect. Please try again");
-      } else {
-        setError("an error accured,Please try Againb");
-      }
+    } catch (e: any) {
+      Alert.alert("Error", e?.errors?.[0]?.message || "Failed");
     }
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ flexGrow: 1 }}
-      enableOnAndroid={true}
-      enableAutomaticScroll={true}
-      extraScrollHeight={30}
-    >
-      <View style={styles.container}>
-        <Image
-          source={require("../../assets/images/TrucksyLogo.png")}
-          style={styles.illustration}
-        />
-        <Text style={styles.title}>Welcome Back</Text>
-        {error ? (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons
-                name="alert-circle"
-                size={20}
-                color={COLORS.textLight}
-              />
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        <TextInput
-          style={[styles.input, error && styles.errorInput]}
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Enter email"
-          placeholderTextColor="#9A8478"
-          onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-        />
-
-        <TextInput
-          style={[styles.input, error && styles.errorInput]}
-          value={password}
-          placeholder="Enter Password"
-          placeholderTextColor="#9A8478"
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-        />
-
-        <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-          <Text style={styles.buttonText}>SignIn</Text>
-        </TouchableOpacity>
-
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Don&apos;t have an account?</Text>
-          <Link href={"/sign-up"} asChild>
-            <TouchableOpacity>
-              <Text style={styles.linkText}>Sign up</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </View>
-    </KeyboardAwareScrollView>
+    <View style={{ padding: 16, gap: 12 }}>
+      {phase === "email" ? (
+        <>
+          <Text style={{ fontSize: 18 }}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={{ borderWidth: 1, padding: 8 }}
+          />
+          <Button title="Send Code" onPress={onSend} />
+        </>
+      ) : (
+        <>
+          <Text style={{ fontSize: 18 }}>Verification Code</Text>
+          <TextInput
+            value={code}
+            onChangeText={setCode}
+            keyboardType="number-pad"
+            style={{ borderWidth: 1, padding: 8 }}
+          />
+          <Button title="Verify" onPress={onVerify} />
+        </>
+      )}
+    </View>
   );
 }
