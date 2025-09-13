@@ -15,4 +15,5 @@ export default {
     },
     android: { package: "com.trucksy.app" },
   },
+
 };
