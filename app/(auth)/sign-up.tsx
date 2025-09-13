@@ -1,7 +1,8 @@
 import { useSignUp } from "@clerk/clerk-expo";
 import { useState } from "react";
-import { View, Text, TextInput, Button, Alert } from "react-native";
+import { View, Text, TextInput, Button, Alert, Image } from "react-native";
 import { useRouter } from "expo-router";
+import {styles} from "../../assets/styles/auth.styles"
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -25,7 +26,6 @@ export default function SignUp() {
       if (!isLoaded || loading) return;
       const emailAddress = email.trim().toLowerCase();
 
-      // quick client-side validation
       if (!/^\S+@\S+\.\S+$/.test(emailAddress)) {
         Alert.alert("Invalid email", "Please enter a valid email address.");
         return;
@@ -36,8 +36,7 @@ export default function SignUp() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPhase("code");
     } catch (e: any) {
-      // If email is already registered, Clerk returns an error here.
-      // You can route to sign-in screen if desired.
+
       showError(e);
     } finally {
       setLoading(false);
@@ -61,7 +60,6 @@ export default function SignUp() {
         await setActive({ session: res.createdSessionId });
         router.replace("/(auth)/role-select");
       } else {
-        // Other statuses are rare here but let's cover them
         Alert.alert("Not complete", `Status: ${res.status}`);
       }
     } catch (e: any) {
@@ -88,14 +86,18 @@ export default function SignUp() {
     <View style={{ padding: 16, gap: 12 }}>
       {phase === "email" ? (
         <>
-          <Text style={{ fontSize: 18 }}>Email</Text>
+          <Image
+            source={require("../../assets/images/TrucksyLogo.png")}
+            style={styles.illustration}
+          />
+          <Text style={styles.title}>Create Account</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder="Enter Email"
             onSubmitEditing={start}
             style={{ borderWidth: 1, padding: 8, borderRadius: 8 }}
           />

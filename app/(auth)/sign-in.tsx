@@ -2,7 +2,9 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { View, Text, TextInput, Button, Alert } from "react-native";
+import { styles } from "../../assets/styles/auth.styles";
+import { COLORS } from "../../constants/colors";
+import { Alert, Button, Image, Text, TextInput, View } from "react-native";
 
 export default function SignIn() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -36,18 +38,18 @@ export default function SignIn() {
       await signIn.create({ identifier });
 
       // 2) Send the email code
-            const emailFactor = (signIn.supportedFirstFactors || []).find(
-              (f: any) => f.strategy === "email_code"
-            ) as any;
-            if (!emailFactor?.emailAddressId) {
-              throw new Error("No email address factor available for this account.");
-            }
-            await signIn.prepareFirstFactor({
-              strategy: "email_code",
-              emailAddressId: emailFactor.emailAddressId,
-            });
-      
-            setPhase("code");
+      const emailFactor = (signIn.supportedFirstFactors || []).find(
+        (f: any) => f.strategy === "email_code"
+      ) as any;
+      if (!emailFactor?.emailAddressId) {
+        throw new Error("No email address factor available for this account.");
+      }
+      await signIn.prepareFirstFactor({
+        strategy: "email_code",
+        emailAddressId: emailFactor.emailAddressId,
+      });
+
+      setPhase("code");
     } catch (e: any) {
       // If the account doesn't exist, Clerk returns "identifier_not_found"
       // You can route to sign-up to keep the UX smooth.
@@ -81,7 +83,10 @@ export default function SignIn() {
       });
 
       if (res.status === "complete") {
-        await setActive({ session: res.createdSessionId });
+        const sess = await setActive({ session: res.createdSessionId });
+
+        console.log("session", sess);
+
         router.replace("/(auth)/role-select");
       } else {
         Alert.alert("Not complete", `Status: ${res.status}`);
@@ -121,8 +126,13 @@ export default function SignIn() {
     <View style={{ padding: 16, gap: 12 }}>
       {phase === "email" ? (
         <>
-          <Text style={{ fontSize: 18 }}>Email</Text>
+          <Image
+            source={require("../../assets/images/TrucksyLogo.png")}
+            style={styles.illustration}
+          />
+          <Text style={styles.title}>Welcome</Text>
           <TextInput
+            style={styles.input}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -130,7 +140,7 @@ export default function SignIn() {
             autoComplete="email"
             placeholder="you@example.com"
             onSubmitEditing={start}
-            style={{ borderWidth: 1, padding: 8, borderRadius: 8 }}
+            
           />
           <Button
             title={loading ? "Sending..." : "Continue"}

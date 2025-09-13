@@ -10,7 +10,7 @@ export default function Index() {
   useEffect(() => {
     const role = (user?.publicMetadata as any)?.role;
     if (role === "user") router.replace("/(user)");
-    else if (role === "driver") router.replace("/(driver)");
+    else if (role === "driver") router.replace("/(driver)/kyc");
   }, [user?.id]);
 
   return (
@@ -22,14 +22,14 @@ export default function Index() {
         gap: 12,
       }}
     >
-      <SignedIn>
+      <SignedOut>
         <Text style={{ fontSize: 18 }}>Welcome to Trucksy</Text>
         <Link href="/(auth)/sign-in">Sign In</Link>
         <Link href="/(auth)/sign-up">Sign Up</Link>
-      </SignedIn>
-      <SignedOut>
-        <Text>Loading…</Text>
       </SignedOut>
+      <SignedIn>
+        <Text>Loading…</Text>
+      </SignedIn>
     </View>
   );
 }
