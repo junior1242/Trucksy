@@ -22,14 +22,14 @@ export default function Index() {
         gap: 12,
       }}
     >
-      <SignedOut>
+      <SignedIn>
         <Text style={{ fontSize: 18 }}>Welcome to Trucksy</Text>
         <Link href="/(auth)/sign-in">Sign In</Link>
         <Link href="/(auth)/sign-up">Sign Up</Link>
-      </SignedOut>
-      <SignedIn>
-        <Text>Loading…</Text>
       </SignedIn>
+      <SignedOut>
+        <Text>Loading…</Text>
+      </SignedOut>
     </View>
   );
 }

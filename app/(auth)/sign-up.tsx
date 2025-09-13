@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useSignUp } from "@clerk/clerk-expo";
 import { useState } from "react";
 import { View, Text, TextInput, Button, Alert } from "react-native";
@@ -9,28 +8,79 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [phase, setPhase] = useState<"email" | "code">("email");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const showError = (e: any, fallback = "Something went wrong") => {
+    const msg =
+      e?.errors?.[0]?.longMessage ||
+      e?.errors?.[0]?.message ||
+      e?.message ||
+      fallback;
+    Alert.alert("Error", msg);
+  };
 
   const start = async () => {
     try {
-      if (!isLoaded) return;
-      await signUp.create({ emailAddress: email });
+      if (!isLoaded || loading) return;
+      const emailAddress = email.trim().toLowerCase();
+
+      // quick client-side validation
+      if (!/^\S+@\S+\.\S+$/.test(emailAddress)) {
+        Alert.alert("Invalid email", "Please enter a valid email address.");
+        return;
+      }
+
+      setLoading(true);
+      await signUp.create({ emailAddress }); // passwordless
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPhase("code");
     } catch (e: any) {
-      Alert.alert("Error", e?.errors?.[0]?.message || "Failed");
+      // If email is already registered, Clerk returns an error here.
+      // You can route to sign-in screen if desired.
+      showError(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   const verify = async () => {
     try {
-      const a = await signUp.attemptEmailAddressVerification({ code });
-      if (a.status === "complete") {
-        await setActive({ session: a.createdSessionId });
+      if (!isLoaded || loading) return;
+      const c = code.trim();
+
+      if (c.length < 6) {
+        Alert.alert("Invalid code", "Enter the 6-digit verification code.");
+        return;
+      }
+
+      setLoading(true);
+      const res = await signUp.attemptEmailAddressVerification({ code: c });
+
+      if (res.status === "complete") {
+        await setActive({ session: res.createdSessionId });
         router.replace("/(auth)/role-select");
+      } else {
+        // Other statuses are rare here but let's cover them
+        Alert.alert("Not complete", `Status: ${res.status}`);
       }
     } catch (e: any) {
-      Alert.alert("Error", e?.errors?.[0]?.message || "Failed");
+      showError(e, "Verification failed. Please check the code and try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resend = async () => {
+    try {
+      if (!isLoaded || loading) return;
+      setLoading(true);
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      Alert.alert("Code sent", "We’ve sent a new code to your email.");
+    } catch (e: any) {
+      showError(e, "Could not resend the code.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,161 +94,44 @@ export default function SignUp() {
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
-            style={{ borderWidth: 1, padding: 8 }}
+            autoComplete="email"
+            placeholder="you@example.com"
+            onSubmitEditing={start}
+            style={{ borderWidth: 1, padding: 8, borderRadius: 8 }}
           />
-          <Button title="Sign Up" onPress={start} />
+          <Button
+            title={loading ? "Sending..." : "Sign Up"}
+            onPress={start}
+            disabled={loading}
+          />
         </>
       ) : (
         <>
           <Text style={{ fontSize: 18 }}>Verification Code</Text>
           <TextInput
             value={code}
-            onChangeText={setCode}
+            onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
             keyboardType="number-pad"
-            style={{ borderWidth: 1, padding: 8 }}
+            maxLength={6}
+            placeholder="6-digit code"
+            onSubmitEditing={verify}
+            style={{
+              borderWidth: 1,
+              padding: 8,
+              borderRadius: 8,
+              letterSpacing: 4,
+            }}
           />
-          <Button title="Verify" onPress={verify} />
+          <View style={{ gap: 8 }}>
+            <Button
+              title={loading ? "Verifying..." : "Verify"}
+              onPress={verify}
+              disabled={loading}
+            />
+            <Button title="Resend Code" onPress={resend} disabled={loading} />
+          </View>
         </>
       )}
     </View>
-=======
-import { useState } from "react";
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { styles } from "../../assets/styles/auth.styles";
-import { COLORS } from "../../constants/colors";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { auth, db } from "../../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
-
-export default function SignUpScreen() {
-  const router = useRouter();
-
-  const [emailAddress, setEmailAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [role, setRole] = useState("user"); // "user" or "driver"
-
-  const onSignUpPress = async () => {
-    setError("");
-    if (!emailAddress || !password) {
-      setError("Please enter an email and password.");
-      return;
-    }
-
-    try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        emailAddress,
-        password
-      );
-      const user = userCredential.user;
-
-      // 2. Send Firebase email verification
-      await sendEmailVerification(user);
-
-      // 3. Save user role and email to Firestore database
-      await setDoc(doc(db, "users", user.uid), {
-        role: role,
-        email: emailAddress,
-      });
-
-      // 4. Inform user and redirect
-      Alert.alert(
-        "Verification Email Sent",
-        "Please check your inbox and click the verification link to activate your account before signing in."
-      );
-      router.push("/sign-in");
-    } catch (e) {
-      setError(e.message);
-      console.error(e);
-    }
-  };
-
-  return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ flexGrow: 1 }}
-      enableOnAndroid={true}
-    >
-      <View style={styles.container}>
-        <Image
-          source={require("../../assets/images/TrucksyLogo.png")}
-          style={styles.illustration}
-        />
-        <Text style={styles.title}>Create Account</Text>
-        {error ? (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        <TextInput
-          style={[styles.input, error && styles.errorInput]}
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Enter email"
-          placeholderTextColor="#9A8478"
-          onChangeText={(email) => setEmailAddress(email)}
-        />
-
-        <TextInput
-          style={[styles.input, error && styles.errorInput]}
-          value={password}
-          placeholder="Enter Password"
-          placeholderTextColor="#9A8478"
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-        />
-
-        <View style={styles.radioContainer}>
-          <TouchableOpacity
-            style={styles.radioButton}
-            onPress={() => setRole("user")}
-          >
-            <Ionicons
-              name={role === "user" ? "radio-button-on" : "radio-button-off"}
-              size={20}
-              color={COLORS.primary}
-            />
-            <Text style={styles.radioText}>User</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.radioButton}
-            onPress={() => setRole("driver")}
-          >
-            <Ionicons
-              name={role === "driver" ? "radio-button-on" : "radio-button-off"}
-              size={20}
-              color={COLORS.primary}
-            />
-            <Text style={styles.radioText}>Driver</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.linkText}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAwareScrollView>
->>>>>>> d24d65ffb41a9bba844d6c6c7c2a95b9d606d307
   );
 }

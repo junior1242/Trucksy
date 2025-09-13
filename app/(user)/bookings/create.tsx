@@ -10,6 +10,7 @@ import {
   FlatList,
   Keyboard,
   ScrollView,
+  GestureResponderEvent,
 } from "react-native";
 import * as Location from "expo-location";
 import MapboxGL from "@rnmapbox/maps";
@@ -63,6 +64,7 @@ const [results, setResults] = useState<GeoFeature[]>([]);
 const [searching, setSearching] = useState(false);
 const [showResults, setShowResults] = useState(false);
 const cameraRef = useRef<MapboxGL.Camera>(null);
+const [submitting, setSubmitting] = useState(false);
 
 
 useEffect(() => { (async()=>{
@@ -90,16 +92,24 @@ const onRegionDidChange = ({ geometry }: any) => {
 const coords = geometry?.coordinates as LngLat | undefined; if(!coords) return; setCenter(coords);
   };
 
-  const captureCurrentPin = async () => {
-requiredVehicleType,
-price: 1500
-});
-Alert.alert('Booking created', r.data.booking._id); resetAll();
-}catch{ Alert.alert('Error', 'Failed to create booking'); }
+const captureCurrentPin = async () => {
+  try {
+    const label = await reverseGeocode(center);
+    if (phase === 'pickup') {
+      setPickup(center);
+      setPickupLabel(label);
+      setPhase('dropoff');
+    } else {
+      setDropoff(center);
+      setDropoffLabel(label);
+    }
+  } catch {
+    Alert.alert('Error', 'Failed to capture location');
+  }
 };
 
 
-let debounceTimer = useRef<NodeJS.Timeout | null>(null);
+let debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 const runSearch = async (text:string) => {
 const q = text.trim(); if(!q){ setResults([]); setShowResults(false); return; }
 try{
@@ -115,13 +125,119 @@ const onChangeQuery = (text:string) => { setQuery(text); if(debounceTimer.curren
 const goToResult = (f:GeoFeature) => { Keyboard.dismiss(); setShowResults(false); setQuery(f.place_name); setCenter(f.center); cameraRef.current?.moveTo(f.center, 800); };
 const useMyLocationForPhase = async () => { try{ const loc = await Location.getCurrentPositionAsync({}); const c:LngLat=[loc.coords.longitude, loc.coords.latitude]; cameraRef.current?.moveTo(c, 800); setCenter(c); }catch{ Alert.alert('Location', 'Could not get current location.'); } };
 
-
 if(loadingCenter){ return (
 <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
 <ActivityIndicator /><Text style={{ marginTop:8 }}>Getting your location…</Text>
 </View>
 ); }
 
+
+  async function onConfirmBooking(event: GestureResponderEvent): Promise<void> {
+    try {
+      event?.preventDefault?.();
+    } catch {
+      /* noop */
+    }
+
+    if (!pickup || !dropoff) {
+      Alert.alert("Missing locations", "Please set both pickup and dropoff locations before confirming.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const payload = {
+      pickup: { latitude: pickup[1], longitude: pickup[0], label: pickupLabel },
+      dropoff: { latitude: dropoff[1], longitude: dropoff[0], label: dropoffLabel },
+      vehicleType: requiredVehicleType,
+      loadType,
+      // additional fields can be added here (estimatedPrice, distance, etc.)
+    };
+
+      try {
+      // Attempt to create booking via the API. Adjust the call if your useAPI() exposes a different method.
+      if (typeof api.post === "function") {
+        await api.post("/bookings", payload);
+      } else if ('createBooking' in api && typeof (api as any).createBooking === "function") {
+        await (api as any).createBooking(payload);
+      } else {
+        // best-effort fallback: try a generic request method that accepts a single options object
+        await (api.request?.({
+          method: "POST",
+          url: "/bookings",
+          data: payload
+        }) as any);
+      }
+
+      Alert.alert("Booking Created", "Your booking was created successfully.");
+      // resetAll is referenced elsewhere in the component UI; call it if available
+      try {
+        // @ts-ignore
+        if (typeof resetAll === "function") resetAll();
+      } catch {
+        /* noop */
+      }
+    } catch (err) {
+      console.error("Failed to create booking:", err);
+      Alert.alert("Error", "Failed to create booking. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function swap(event: GestureResponderEvent): void {
+    try {
+      event?.preventDefault?.();
+    } catch {
+      /* noop */
+    }
+
+    if (!pickup || !dropoff) return;
+
+    const oldPickup = pickup;
+    const oldPickupLabel = pickupLabel;
+
+    // Swap coordinates and labels
+    setPickup(dropoff);
+    setPickupLabel(dropoffLabel);
+    setDropoff(oldPickup);
+    setDropoffLabel(oldPickupLabel);
+
+    // Move camera to the new pickup (which was the previous dropoff)
+    const newCenter = dropoff;
+    setCenter(newCenter);
+    cameraRef.current?.moveTo(newCenter, 800);
+  }
+
+  function resetAll(event?: GestureResponderEvent): void {
+    try {
+      event?.preventDefault?.();
+    } catch {
+      /* noop */
+    }
+
+    // Clear selected locations and labels
+    setPickup(null);
+    setDropoff(null);
+    setPickupLabel("Pickup");
+    setDropoffLabel("Dropoff");
+
+    // Reset UI state
+    setPhase("pickup");
+    setQuery("");
+    setResults([]);
+    setShowResults(false);
+    setSearching(false);
+    setSubmitting(false);
+
+    // Reset selectors to defaults
+    setRequiredVehicleType("TRUCK");
+    setLoadType("General Goods");
+
+    // Dismiss keyboard and recenter camera to current center
+    Keyboard.dismiss();
+    cameraRef.current?.moveTo(center, 800);
+  }
 
 return (
 <View style={{ flex: 1 }}>
@@ -198,7 +314,7 @@ return (
 ) : !dropoff ? (
 <Button title="Set Dropoff Here" onPress={captureCurrentPin} />
 ) : (
-<Button title="Confirm Booking" onPress={onConfirmBooking} disabled={!canConfirm} />
+<Button title="Confirm Booking" onPress={onConfirmBooking} disabled={!pickup || !dropoff || submitting} />
 )}
 </View>
 </View>
