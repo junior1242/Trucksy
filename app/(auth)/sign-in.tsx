@@ -138,7 +138,7 @@ export default function SignIn() {
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder="Enter Email"
             onSubmitEditing={start}
             
           />
